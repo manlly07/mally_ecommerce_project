@@ -1,18 +1,10 @@
 import { Module } from '@nestjs/common';
 import { KeysService } from './keys.service';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Keys, KeySchema } from 'src/schemas/key.schema';
+import { KeysController } from './keys.controller';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([
-      {
-        name: Keys.name,
-        schema: KeySchema,
-      }
-    ]),
-  ],
   providers: [KeysService],
+  controllers: [KeysController],
   exports: [KeysService]
 })
 export class KeysModule {}

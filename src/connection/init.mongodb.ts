@@ -5,6 +5,6 @@ export const DatabaseProvider = MongooseModule.forRootAsync({
     imports: [ConfigModule],
     inject: [ConfigService],
     useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('DATABASE_URL'),
+        uri: configService.get<string>('MONGO_URL'),
     }),
 });

@@ -3,13 +3,13 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { UsersModule } from 'src/users/users.module';
 import { EmailModule } from 'src/email/email.module';
-import { OtpModule } from 'src/otp/otp.module';
+import { KeysModule } from 'src/keys/keys.module';
 
 @Module({
     imports: [
         UsersModule, 
         EmailModule, 
-        OtpModule,
+        KeysModule,
     ],
     controllers: [AuthController],
     providers: [AuthService],

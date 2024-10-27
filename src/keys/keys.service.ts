@@ -1,21 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { Keys } from 'src/schemas/key.schema';
-import { KeyType } from './keys.dto';
-
+import { UserTokenType } from 'src/auth/auth.dto';
+import prisma from 'src/connection/init.mysql';
 @Injectable()
 export class KeysService {
-    constructor(
-        @InjectModel(Keys.name) private KeyModel: Model<Keys>,
-    ) {}
+    async createUserToken(data: UserTokenType) {
+        return await prisma.user_tokens.create({ data });
+    }
 
-    async create(data : KeyType ) {
-        const { userId: filter , ...update } = data;
-        const options = { upsert: true, new: true };
-        
-        const token = await this.KeyModel.findOneAndUpdate(filter, update, options).exec();
-        return token ? token.publicKey : null
+    async findUserToken(conditions: Object) {
+        return await prisma.user_tokens.findFirst({
+            where: {
+                ...conditions,
+                is_active: true,
+                expiration: {
+                    gte: new Date(),
+                }
+            }
+        });
+    }
 
+    async deleteUserToken(conditions: Object) {
+        return await prisma.user_tokens.updateMany({
+            where: {
+                ...conditions,
+                is_active: true,
+            },
+            data: {
+                is_active: false,
+            }
+        });
     }
 }

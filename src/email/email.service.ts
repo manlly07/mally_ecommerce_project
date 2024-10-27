@@ -1,5 +1,5 @@
 import { MailerService } from '@nestjs-modules/mailer';
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import TemplateEmail from 'src/common/template';
 import { replacePlaceHolder } from 'src/common/utils';
 import { BaseEmail } from './email.dto';
@@ -7,19 +7,45 @@ import { UsersService } from 'src/users/users.service';
 
 
 import { KeysService } from 'src/keys/keys.service';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { CONSTANT } from 'src/common/constant';
 
 @Injectable()
 export class EmailService {
     constructor(
         private readonly mailService: MailerService,
+        private readonly jwtService: JwtService,
+        private readonly configService: ConfigService,
     ) {}
 
-    async sendEmailToken(email : string, otpToken : string) {
+    async generateTokenRandom(user_email: string ) {
+        const token = await this.jwtService.signAsync({ user_email }, {
+            expiresIn: CONSTANT.OTP_EXPIRATION,
+            secret: this.configService.get('SECRET_KEY_OTP'),
+        });
+        return token;
+    }
 
+    async verifyToken(token: string) {
+        try {
+
+            const payload = await this.jwtService.verifyAsync(token, {
+                secret: this.configService.get('SECRET_KEY_OTP'),
+            });
+            return payload;
+            
+        } catch (error) {
+            throw new UnauthorizedException('Token invalid');
+        }
+    }
+
+    async sendEmailToken(email : string) {
+        const token = await this.generateTokenRandom(email);
         const template = TemplateEmail.htmlEmailToken();
 
         const content = replacePlaceHolder(template, {
-            link_verify: `http://localhost:8080/auth/verify?token=${otpToken}`,
+            link_verify: `http://localhost:8080/auth/verify?token=${token}`,
         });
     
         this.sendEmailBase({
@@ -29,7 +55,7 @@ export class EmailService {
             template: content,
         })
 
-        return 1;
+        return true;
     }
 
     async sendEmailBase({ toEmail, subject, text, template } : BaseEmail) {

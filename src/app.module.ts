@@ -1,15 +1,15 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
-
-import { DatabaseProvider } from './connection/init.mongodb';
-import * as dotenv from 'dotenv';
 import { ConfigModule } from '@nestjs/config';
 import { UsersModule } from './users/users.module';
 import { EmailModule } from './email/email.module';
-import { OtpModule } from './otp/otp.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { KeysModule } from './keys/keys.module';
 import { JwtModule } from '@nestjs/jwt';
+
+import * as dotenv from 'dotenv';
+import { DatabaseProvider } from './connection/init.mongodb';
+import { RequestInfoMiddleware } from './middlewares/info.middleware';
 dotenv.config();
 
 @Module({
@@ -43,8 +43,16 @@ dotenv.config();
     UsersModule,
     AuthModule,
     EmailModule,
-    OtpModule,
     KeysModule,
+
   ],
+  providers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(RequestInfoMiddleware)
+      .forRoutes('*');
+  }
+
+}

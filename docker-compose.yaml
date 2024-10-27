@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  # nestjs:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - '8080:8080'
+  #   depends_on:
+  #     - mongodb
+  #     - mysql
+  #   environment:
+  #     - PORT=8080
+  #     - MONGO_URL=mongodb://localhost:27017/ecommerce
+  #     - MYSQL_URL=mysql://root:@localhost:3306/ecommerce
+  #     - MAIL_HOST = "smtp.gmail.com"
+  #     - MAIL_PORT = 587
+  #     - MAIL_USER = "dvc.290603@gmail.com"
+  #     - MAIL_PASS = "cedp dere gnsl bwru"
+
+  mongodb:
+    image: mongo:latest
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb_data:/data/db
+
+  mysql:
+    image: mysql:latest
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mongodb_data:
+  mysql_data:
