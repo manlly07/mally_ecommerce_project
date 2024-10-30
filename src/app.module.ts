@@ -1,15 +1,19 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
-import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
-import { UsersModule } from './users/users.module';
-import { EmailModule } from './email/email.module';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { KeysModule } from './keys/keys.module';
 import { JwtModule } from '@nestjs/jwt';
 
 import * as dotenv from 'dotenv';
-import { DatabaseProvider } from './connection/init.mongodb';
+import { DatabaseProvider } from './common/connection/init.mongodb';
 import { RequestInfoMiddleware } from './middlewares/info.middleware';
+import { RolesModule } from './components/roles/roles.module';
+import { UserRoleModule } from './components/user-role/user-role.module';
+import { AuthModule } from './components/auth/auth.module';
+import { UsersModule } from './components/users/users.module';
+import { EmailModule } from './components/email/email.module';
+import { KeysModule } from './components/keys/keys.module';
+import { PrismaModule } from './common/connection/prisma/prisma.module';
+import { PermissionModule } from './components/permission/permission.module';
 dotenv.config();
 
 @Module({
@@ -44,6 +48,10 @@ dotenv.config();
     AuthModule,
     EmailModule,
     KeysModule,
+    RolesModule,
+    UserRoleModule,
+    PrismaModule,
+    PermissionModule,
 
   ],
   providers: [],

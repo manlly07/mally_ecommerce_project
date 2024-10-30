@@ -3,10 +3,8 @@ import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/
 import TemplateEmail from 'src/common/template';
 import { replacePlaceHolder } from 'src/common/utils';
 import { BaseEmail } from './email.dto';
-import { UsersService } from 'src/users/users.service';
 
 
-import { KeysService } from 'src/keys/keys.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { CONSTANT } from 'src/common/constant';

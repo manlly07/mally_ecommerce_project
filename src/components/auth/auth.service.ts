@@ -1,6 +1,4 @@
 import { BadRequestException, Injectable, Redirect } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
-import { EmailService } from 'src/email/email.service';
 
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
@@ -8,7 +6,10 @@ import { LoginType } from './auth.dto';
 import { JwtService } from '@nestjs/jwt';
 import { CONSTANT } from 'src/common/constant';
 import { generateToken, getSelectData, getSelectDataFromObject, unGetSelectData } from 'src/common/utils';
-import { KeysService } from 'src/keys/keys.service';
+import { UsersService } from '../users/users.service';
+import { KeysService } from '../keys/keys.service';
+import { EmailService } from '../email/email.service';
+import { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -64,10 +65,13 @@ export class AuthService {
         return true;
     }
 
-    async login(data: LoginType): Promise<any> {
+    async login(data: LoginType, response: Response): Promise<any> {
         const { email, password } = data;
 
         const findUser = await this.userService.findByEmail(email);
+
+        console.log(findUser);
+        
         if(!findUser) throw new BadRequestException('User not registered');
 
         const isMatch = await bcrypt.compare(password, findUser.user_password);
@@ -77,28 +81,30 @@ export class AuthService {
         const privateKey = randomBytes(64).toString('hex');
 
         const payload = {
-            user_id: findUser.user_id,
+            user_id: findUser.id,
             email,
         }
         
         // checked already logged in user
         const checkUserToken = await this.keyService.findUserToken({
-            user_id: findUser.user_id,
+            user_id: findUser.id,
             user_agent: data.user_agent,
             user_login_ip: data.user_login_ip,
         });
 
         if(checkUserToken) {
             console.log("You have logged in!")
-            Redirect('https://google.com')
-            return
+            // Redirect('https://google.com')
+            return response.json({
+                message: "You have logged in!"
+            })
         };
 
         const refreshToken = await generateToken(payload, privateKey, CONSTANT.REFRESH_TOKEN_EXPIRATION);
         const accessToken = await generateToken(payload, publicKey, CONSTANT.ACCESS_TOKEN_EXPIRATION);
 
         const keys = await this.keyService.createUserToken({
-            user_id: findUser.user_id,
+            user_id: findUser.id,
             user_agent: data.user_agent,
             user_login_ip: data.user_login_ip,
             user_private_key: privateKey,
@@ -109,11 +115,16 @@ export class AuthService {
 
         if(!keys) throw new BadRequestException('Login failed! Please try again');
 
-        return {
-            user_id: findUser.user_id,
+        response.cookie('refresh_token', refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+            maxAge: parseInt(CONSTANT.REFRESH_TOKEN_EXPIRATION) * 24 * 60 * 60 * 1000,
+        })
+        return response.json({
+            user_id: findUser.id,
             accessToken,
-            refreshToken
-        };
+        })
     }
 
     async logout(refreshToken: string){

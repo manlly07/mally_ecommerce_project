@@ -5,35 +5,36 @@ import {
     Injectable,
     UnauthorizedException,
   } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
   import { JwtService } from '@nestjs/jwt';
   import { Request } from 'express';
-import { KeysService } from 'src/keys/keys.service';
+import { KeysService } from 'src/components/keys/keys.service';
   
   @Injectable()
   export class AuthGuard implements CanActivate {
     constructor( 
         private jwtService: JwtService,
-        private configService: ConfigService,
         private keyService: KeysService
     ) {}
   
     async canActivate(context: ExecutionContext) {
       const request = context.switchToHttp().getRequest();
       const token = this.extractTokenFromHeader(request);
-      const { user_id } = request.body;
-      const user_ip = request['user_ip'];
-      const user_agent = request['user_agent'];
+      const user_login_ip = request.ip;
+      const user_agent = request.get('User-Agent');
+
+      request.body = { ...request.body, user_login_ip, user_agent };
+      
       if (!token) {
         throw new UnauthorizedException('Access token is missing');
       }
-      
+
       try {
         const keyStore = await this.keyService.findUserToken({
-            user_id: user_id,
+            user_id: request.body.user_id,
             user_agent: user_agent,
-            user_login_ip: user_ip,
+            user_login_ip: user_login_ip,
         });
+        console.log(keyStore)
 
         if(!keyStore) throw new UnauthorizedException();
 

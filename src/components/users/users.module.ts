@@ -3,7 +3,10 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from 'src/schemas/user.schema';
-import { KeysModule } from 'src/keys/keys.module';
+import { KeysModule } from '../keys/keys.module';
+import { UserRepository } from 'src/repositories/user.repository';
+import { PrismaService } from 'src/common/connection/prisma/prisma.service';
+
 
 @Module({
   imports: [
@@ -13,9 +16,10 @@ import { KeysModule } from 'src/keys/keys.module';
         schema: UserSchema,
       }
     ]),
-    KeysModule
+    KeysModule,
+    
   ],
-  providers: [UsersService],
+  providers: [UsersService, UserRepository, PrismaService],
   controllers: [UsersController],
   exports: [UsersService],
 })

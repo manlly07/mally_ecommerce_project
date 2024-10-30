@@ -9,32 +9,20 @@ export class AuthController {
     constructor(private authService: AuthService) {}
 
     @Post('register')
-    async register(@Body('email') email: string) {
-        return this.authService.register(email);
+    async register(@Body('user_email') user_email: string) {
+        return this.authService.register(user_email);
     }
 
     @Get('verify')
     async verify(@Query('token') token: string) {
         return this.authService.verifyEmail(token);
     }
-
+    // 
     @Post('login')
     async login(@Body() data: LoginType, @Req() request: Request, @Res() response: Response) {
-        data.user_login_ip = request['user_ip']; 
-        data.user_agent = request['user_agent'];
-
-        const { user_id, accessToken, refreshToken} = await this.authService.login(data);
-        
-        response.cookie('refresh_token', refreshToken, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'strict',
-            maxAge: parseInt(CONSTANT.REFRESH_TOKEN_EXPIRATION) * 24 * 60 * 60 * 1000,
-        })
-        return response.json({
-            user_id,
-            accessToken,
-        })
+        data.user_login_ip = request.ip; 
+        data.user_agent = request.get('user-agent');
+        return await this.authService.login(data, response);
     }
 
     @Post('logout')

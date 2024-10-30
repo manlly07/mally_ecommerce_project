@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { UserTokenType } from 'src/auth/auth.dto';
-import prisma from 'src/connection/init.mysql';
+import prisma from 'src/common/connection/init.mysql';
+import { UserTokenType } from '../auth/auth.dto';
+import { KeysRepository } from 'src/repositories/keys.repository';
 @Injectable()
 export class KeysService {
+    constructor(private keysRepository: KeysRepository) {}
+
     async createUserToken(data: UserTokenType) {
-        return await prisma.user_tokens.create({ data });
+        return await this.keysRepository.create({ data });
     }
 
     async findUserToken(conditions: Object) {
-        return await prisma.user_tokens.findFirst({
+        console.log(conditions)
+        return await this.keysRepository.findFirst({
             where: {
                 ...conditions,
                 is_active: true,
@@ -20,7 +24,7 @@ export class KeysService {
     }
 
     async deleteUserToken(conditions: Object) {
-        return await prisma.user_tokens.updateMany({
+        return await this.keysRepository.updateMany({
             where: {
                 ...conditions,
                 is_active: true,

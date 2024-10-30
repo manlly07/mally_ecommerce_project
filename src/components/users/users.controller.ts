@@ -1,13 +1,13 @@
 import { Body, Controller, Post, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { AuthGuard } from 'src/guard/auth.guard';
+import { AuthGuard } from 'src/common/guard/auth.guard';
 
 @UseGuards(AuthGuard)
 @Controller('users')
 export class UsersController {
     constructor(private userService: UsersService) {}
     @Post('me')
-    async authenticated (user_id: number) {
+    async authenticated (@Body('user_id') user_id: string) {
         const user = await this.userService.findById(user_id)
         return user
     }
@@ -25,4 +25,5 @@ export class UsersController {
         const users = await this.userService.getUsers()
         return users
     }
+
 }
