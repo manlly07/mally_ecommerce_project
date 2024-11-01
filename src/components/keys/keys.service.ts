@@ -19,6 +19,9 @@ export class KeysService {
                 expiration: {
                     gte: new Date(),
                 }
+            },
+            include: {
+                user: true
             }
         });
     }
@@ -33,5 +36,12 @@ export class KeysService {
                 is_active: false,
             }
         });
+    }
+
+    async update(params: {
+        where: Object,
+        data: Object
+    }) {
+        return await this.keysRepository.update(params);
     }
 }

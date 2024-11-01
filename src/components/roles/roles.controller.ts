@@ -17,8 +17,7 @@ export class RolesController {
 
     @Put(':role_id')
     async updateRole(@Param('role_id') role_id: string, @Body() data: any) {
-        const condition = {};
-        return this.rolesService.updateRole(role_id, condition,  data);
+        return this.rolesService.updateRole(role_id,  data);
     }
 
     @Delete(':role_id')

@@ -1,4 +1,5 @@
 import { JwtService } from "@nestjs/jwt"
+import { SetMetadata } from '@nestjs/common';
 
 export const replacePlaceHolder = (template: string, params: object) => {
     let result = template
@@ -37,3 +38,37 @@ export const unGetSelectDataFromObject = (select: object, params: Array<string>)
     
     return newObject;
 }
+
+
+export const updateNestedObjectParser = (obj: object) => {
+    const final = {}
+
+    Object.keys(obj).forEach( k => {
+        if( typeof obj[k] === 'object' && !Array.isArray(obj[k]) ) {
+            const response = updateNestedObjectParser(obj[k])
+            Object.keys(response).forEach( a => {
+                final[`${k}.${a}`] = response[a]
+            })
+        }else {
+            final[k] = obj[k]
+        }
+    })
+
+    return final
+}
+
+export const updateNestedArrayParser = (obj: any) => {
+    const flattenedData = obj.user_roles.flatMap(userRole =>
+        userRole.role.role_permissions.map(permission => ({
+          role_name: userRole.role.role_name,
+          user_id: obj.id,
+          role_id: userRole.role_id,
+          permission_id: permission.permission_id,
+          permission_name: permission.permission.permission_name,
+        }))
+    );
+    
+    return flattenedData
+}
+
+export const Permissions = (...permissions: string[]) => SetMetadata('permissions', permissions);

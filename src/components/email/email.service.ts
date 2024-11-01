@@ -34,7 +34,7 @@ export class EmailService {
             return payload;
             
         } catch (error) {
-            throw new UnauthorizedException('Token invalid');
+            throw new BadRequestException('Token invalid');
         }
     }
 

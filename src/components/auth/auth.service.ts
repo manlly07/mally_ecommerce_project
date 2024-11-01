@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, Redirect } from '@nestjs/common';
+import { BadRequestException, Injectable, Redirect, UnauthorizedException } from '@nestjs/common';
 
 import { randomBytes } from 'crypto';
 import * as bcrypt from 'bcrypt';
@@ -136,5 +136,84 @@ export class AuthService {
 
         return true;
 
+    }
+
+    async refreshToken(refreshToken: string, response: Response, user_id: string) {
+        const findUserToken = await this.userService.findById({
+            user_id: user_id,
+            include: {
+                user_tokens: true
+            }
+        }) as any;
+        if(!findUserToken) throw new BadRequestException('User not found');
+
+        console.log(findUserToken)
+        // check refreshToken cos trong findUserToken 
+        const availableToken = findUserToken.user_tokens.find((token:any) => token.user_refresh_token === refreshToken);
+
+        console.log(availableToken)
+
+        if(!availableToken) throw new UnauthorizedException('Not authorized');
+
+        if(!availableToken.is_active) {
+            await this.userService.updateMany(user_id, {
+                is_active: false,
+            })
+
+            throw new UnauthorizedException('Something went wrong! Please relogin your account');
+        } 
+
+        const payload = {
+            user_id,
+            email: findUserToken.user_email,
+        }
+        console.log(new Date(availableToken.expiration).getTime().toString());
+        const { user_private_key: privateKey, user_public_key: publicKey } = availableToken;
+        const newRefreshToken = (await generateToken(payload, privateKey, new Date(availableToken.expiration).getTime().toString()));
+        const newAccessToken = await generateToken(payload, publicKey, CONSTANT.ACCESS_TOKEN_EXPIRATION);
+
+        const updateToken = await this.keyService.update({
+            where: {
+                user_id: user_id,
+                user_refresh_token: refreshToken,
+            },
+            data: {
+                user_refresh_token: newRefreshToken,
+            }
+        })
+
+        response.cookie('refresh_token', newRefreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'strict',
+            maxAge: new Date(availableToken.expiration).getTime(),
+        })
+
+        return {
+            user_id,
+            accessToken: newAccessToken,
+        }
+        // const updateToken = await this.keyService.createUserToken({
+        //     user_id: findUserToken.user_id,
+        //     user_agent: findUserToken.user_agent,
+        //     user_login_ip: findUserToken.user_login_ip,
+        //     user_private_key: privateKey,
+        //     user_public_key: publicKey,
+        //     user_refresh_token: newRefreshToken,
+        //     expiration: new Date(new Date().getTime() + parseInt(CONSTANT.REFRESH_TOKEN_EXPIRATION) * 24 * 60 * 60 * 1000 ),
+        // })
+
+        // if(!updateToken) throw new BadRequestException('Refresh token failed! Please try again');
+
+        // response.cookie('refresh_token', newRefreshToken, {
+        //     httpOnly: true,
+        //     secure: true,
+        //     sameSite: 'strict',
+        //     maxAge: parseInt(CONSTANT.REFRESH_TOKEN_EXPIRATION) * 24 * 60 * 60 * 1000,
+        // })
+        // return response.json({
+        //     user_id: findUserToken.user_id,
+        //     accessToken: newAccessToken,
+        // })
     }
 }

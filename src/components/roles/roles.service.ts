@@ -12,15 +12,16 @@ export class RolesService {
     async createRole(data: any) {
         const foundRole = await this.rolesRepository.findByName(data.role_name)
         if(foundRole) throw new BadRequestException('Role already exists');
-            
+
         return this.rolesRepository.create({ data });
     }
 
-    async updateRole(role_id: string, condition: Object, data: any) {
+    async updateRole(role_id: string, data: any) {
+        
         return this.rolesRepository.update({ where: { 
             id: role_id,
-            ...condition
         }, data });
+        
     }
 
     async deleteRole(role_id: string, condition: Object) {

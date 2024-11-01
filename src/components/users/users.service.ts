@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { unGetSelectDataFromObject } from 'src/common/utils';
+import { unGetSelectDataFromObject, updateNestedArrayParser } from 'src/common/utils';
 import { UserRepository } from 'src/repositories/user.repository';
 @Injectable()
 export class UsersService {
@@ -21,10 +21,18 @@ export class UsersService {
         return newUser;
     }
 
-    async findById(user_id: string) {
+    async findById(params: {
+        user_id: string,
+        where?: object,
+        include?: object
+    }) {
+        const { user_id, where, include } = params;
         const user = await this.userRepository.findById({
-            id: user_id
-        });
+            id: user_id,
+            where: where,
+            include: include
+        },
+    );
         return unGetSelectDataFromObject(user, ['user_password', 'user_salt', 'created_at', 'updated_at']);
     }
 
@@ -38,14 +46,47 @@ export class UsersService {
         return unGetSelectDataFromObject(user, ['user_password', 'user_salt', 'created_at', 'updated_at']);
     }
 
-    async getUsers() {
-        const users = await this.userRepository.findAll({
-            // select: {
-            //     user_id: true,
-            //     user_email: true,
-            //     user_roles: true,
-            // }
+    async updateMany(user_id: string, data: any) {
+        const user = await this.userRepository.updateMany({
+            where: {
+                user_id
+            },
+            data: data
         });
+        return unGetSelectDataFromObject(user, ['user_password', 'user_salt', 'created_at', 'updated_at']);
+    }
+
+    async getUsers(params?: object) {
+        const users = await this.userRepository.findAll(params);
         return users.map(user => unGetSelectDataFromObject(user, ['user_password', 'user_salt', 'created_at', 'updated_at']));
+    }
+
+    async userHasPermission(user_id: string, permission: Array<string>) {
+        // if(permission ) return true
+        const userWithRole = await this.userRepository.findById({
+            id: user_id,
+            include: {
+                user_roles: {
+                    include: {
+                        role: {
+                            include: {
+                                role_permissions: {
+                                    include: {
+                                        permission: true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+            }
+        }) as any;
+
+        // return userWithRole;
+        if(!userWithRole?.user_roles) return false;
+
+        const roles = updateNestedArrayParser(userWithRole)
+
+        return roles.some((role : any) => permission.includes(role.permission_name));
     }
 }

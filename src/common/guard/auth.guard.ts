@@ -2,6 +2,7 @@
 import {
     CanActivate,
     ExecutionContext,
+    ForbiddenException,
     Injectable,
     UnauthorizedException,
   } from '@nestjs/common';
@@ -25,7 +26,7 @@ import { KeysService } from 'src/components/keys/keys.service';
       request.body = { ...request.body, user_login_ip, user_agent };
       
       if (!token) {
-        throw new UnauthorizedException('Access token is missing');
+        throw new ForbiddenException('Access token is missing');
       }
 
       try {
@@ -36,7 +37,7 @@ import { KeysService } from 'src/components/keys/keys.service';
         });
         console.log(keyStore)
 
-        if(!keyStore) throw new UnauthorizedException();
+        if(!keyStore) throw new ForbiddenException();
 
         const payload = await this.jwtService.verifyAsync(
           token,
@@ -45,20 +46,21 @@ import { KeysService } from 'src/components/keys/keys.service';
           }
         );
 
-        if(keyStore.user_id !== payload.user_id) throw new UnauthorizedException();
+        if(keyStore.user_id !== payload.user_id) throw new ForbiddenException();
         request['user'] = payload;
 
       } catch (error) {
         if (error.name === 'TokenExpiredError') {
             throw new UnauthorizedException('Access token expired');
         } else {
-            throw new UnauthorizedException('Invalid access token');
+            throw new ForbiddenException('Invalid access token');
         }
       }
       return true;
     }
   
     private extractTokenFromHeader(request: Request) {
+      console.log(request);
       const [type, token] = request.headers.authorization?.split(' ') ?? [];
       return type === 'Bearer' ? token : undefined;
     }

@@ -19,21 +19,29 @@ export class PrismaRepository<T> extends BaseRepository<T> {
 
   async findById(params: {
     id: string,
-    where?: object
+    where?: object,
+    include?: object
   }): Promise<T | null> {
-    console.log(params);
-    const { id, where } = params;
+    const { id, where, include } = params;
     return await ( prisma[this.model] as any ).findUnique({
       where: {
         id,
         ...where,
       },
+      include
     });
   }
 
   async create(data: any): Promise<T> {
     return ( prisma[this.model] as any ).create({
       ...data,
+    });
+  }
+
+  async createMany(data: any): Promise<T> {
+    return ( prisma[this.model] as any ).createMany({
+      ...data,
+      skipDuplicates: true,
     });
   }
 

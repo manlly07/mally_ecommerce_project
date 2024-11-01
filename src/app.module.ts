@@ -13,7 +13,8 @@ import { UsersModule } from './components/users/users.module';
 import { EmailModule } from './components/email/email.module';
 import { KeysModule } from './components/keys/keys.module';
 import { PrismaModule } from './common/connection/prisma/prisma.module';
-import { PermissionModule } from './components/permission/permission.module';
+import { PermissionsModule } from './components/permissions/permissions.module';
+import { RolePermissionModule } from './components/role-permission/role-permission.module';
 dotenv.config();
 
 @Module({
@@ -51,8 +52,8 @@ dotenv.config();
     RolesModule,
     UserRoleModule,
     PrismaModule,
-    PermissionModule,
-
+    PermissionsModule,
+    RolePermissionModule
   ],
   providers: [],
 })
