@@ -15,6 +15,8 @@ import { KeysModule } from './components/keys/keys.module';
 import { PrismaModule } from './common/connection/prisma/prisma.module';
 import { PermissionsModule } from './components/permissions/permissions.module';
 import { RolePermissionModule } from './components/role-permission/role-permission.module';
+import { SpusModule } from './components/spus/spus.module';
+import { SkusModule } from './components/skus/skus.module';
 dotenv.config();
 
 @Module({
@@ -53,7 +55,10 @@ dotenv.config();
     UserRoleModule,
     PrismaModule,
     PermissionsModule,
-    RolePermissionModule
+    RolePermissionModule,
+
+    SpusModule,
+    SkusModule
   ],
   providers: [],
 })
